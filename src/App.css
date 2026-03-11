@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scale everything that uses rem (Tailwind spacing, type, etc.). 1.25 = 125%. */
+html {
+  font-size: 150%;
+}
+
 body {
   @apply bg-stone-950 text-stone-50;
 
