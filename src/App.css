@@ -4,4 +4,15 @@
 
 body {
   @apply bg-stone-950 text-stone-50;
+
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
