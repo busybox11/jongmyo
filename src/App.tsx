@@ -1,12 +1,10 @@
 import '@fontsource-variable/figtree';
 import './App.css';
 
-import NowPlaying from './views/NowPlaying';
+import Main from './views/Main';
 
 const App = () => {
-  return (
-    <NowPlaying />
-  );
+  return <Main />;
 };
 
 export default App;
