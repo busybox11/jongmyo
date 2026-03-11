@@ -25,7 +25,7 @@ if (rootEl) {
               }
             : {}
         }
-        className="flex items-center justify-center bg-stone-950 text-stone-50 w-full h-full overflow-hidden"
+        className="flex items-center justify-center bg-stone-950 text-stone-50 tracking-wide w-full h-full overflow-hidden"
       >
         <App />
       </main>
