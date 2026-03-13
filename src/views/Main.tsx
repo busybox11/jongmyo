@@ -9,12 +9,20 @@ import {
   UsbIcon,
 } from 'lucide-react';
 import { useNowPlaying } from '../hooks/useNowPlaying';
+import { useRouter } from '../hooks/useRouter';
+
+import MainAlbums from './routes/MainAlbums';
+import MainArtists from './routes/MainArtists';
+import MainHome from './routes/MainHome';
+import MainLibrary from './routes/MainLibrary';
+import MainPlaylists from './routes/MainPlaylists';
 
 const sidebarItems = [
   {
     icon: HomeIcon,
-    label: 'Home',
+    label: 'Jongmyo',
     href: '/',
+    view: MainHome,
   },
   {
     icon: Music4Icon,
@@ -25,26 +33,30 @@ const sidebarItems = [
     icon: LibraryIcon,
     label: 'Library',
     href: '/library',
+    view: MainLibrary,
   },
   {
     icon: ListMusicIcon,
     label: 'Playlists',
     href: '/playlists',
+    view: MainPlaylists,
   },
   {
     icon: Mic2Icon,
     label: 'Artists',
     href: '/artists',
+    view: MainArtists,
   },
   {
     icon: DiscAlbumIcon,
     label: 'Albums',
     href: '/albums',
+    view: MainAlbums,
   },
 ];
 
 function Sidebar() {
-  const active = '/';
+  const { path } = useRouter();
 
   return (
     <aside className="w-20 h-full">
@@ -58,7 +70,7 @@ function Sidebar() {
                 key={item.href}
                 icon={<item.icon size={48} />}
                 href={item.href}
-                active={active === item.href}
+                active={path === item.href}
               />
             ),
           )}
@@ -77,46 +89,61 @@ function GenericNavIcon({
   href: string;
   active: boolean;
 }) {
+  const { push } = useRouter();
   return (
     <li
       key={href}
       data-active={active}
       className="data-[active=true]:opacity-100 text-stone-200 opacity-50"
     >
-      <a href={href} className="size-16 flex items-center justify-center">
+      <button
+        type="button"
+        onClick={() => push(href)}
+        className="size-16 flex items-center justify-center"
+      >
         {icon}
-      </a>
+      </button>
     </li>
   );
 }
 
 function NowPlayingNavIcon() {
+  const { push } = useRouter();
   const nowPlaying = useNowPlaying();
 
   if (!nowPlaying) {
     return (
-      <div className="size-14 flex items-center justify-center">
-        <Music4Icon size={48} />
-      </div>
+      <GenericNavIcon
+        icon={<Music4Icon size={48} />}
+        href="/nowplaying"
+        active={false}
+      />
     );
   }
 
   return (
-    <div className="size-14 flex items-center justify-center">
+    <button
+      className="size-14 flex items-center justify-center"
+      type="button"
+      onClick={() => push('/nowplaying')}
+    >
       <img
         src={nowPlaying.meta.image}
         alt={nowPlaying.title}
         className="size-10 rounded-lg object-cover ring ring-white"
       />
-    </div>
+    </button>
   );
 }
 
 function TopBar() {
+  const { path } = useRouter();
+  const currentItem = sidebarItems.find((item) => item.href === path);
+
   return (
-    <header className="w-full h-20 p-2 flex flex-row items-center justify-between">
+    <header className="w-full h-20 p-2 flex flex-row items-center justify-between shrink-0">
       <nav className="h-full flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Jongmyo</h1>
+        <h1 className="text-2xl font-bold">{currentItem?.label}</h1>
       </nav>
 
       <div className="flex items-center justify-center px-8 space-x-2 text-stone-200 opacity-50">
@@ -130,14 +157,25 @@ function TopBar() {
 }
 
 export default function Main() {
+  const { path } = useRouter();
+  const currentItem = sidebarItems.find((item) => item.href === path);
+
   return (
-    <main className="w-full h-full flex flex-row">
+    <main
+      className="w-full h-full flex flex-row overflow-hidden"
+      style={{
+        backgroundImage:
+          'radial-gradient(circle, transparent, transparent 30%, #4a044e30 80%, #4a044e90)',
+        backgroundSize: '200vw 280vh',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       <Sidebar />
 
-      <section className="w-full">
+      <section className="w-full h-full flex flex-col overflow-hidden">
         <TopBar />
 
-        <div className="flex-1"></div>
+        {currentItem?.view && <currentItem.view />}
       </section>
     </main>
   );
