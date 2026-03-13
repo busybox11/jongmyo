@@ -1,4 +1,6 @@
-import { useNowPlaying } from '../hooks/useNowPlaying';
+import { XIcon } from 'lucide-react';
+import { useNowPlaying } from '../../hooks/useNowPlaying';
+import { useRouter } from '../../hooks/useRouter';
 
 function formatDuration(milliseconds: number) {
   const seconds = Math.floor(milliseconds / 1000);
@@ -8,6 +10,7 @@ function formatDuration(milliseconds: number) {
 }
 
 export default function NowPlaying() {
+  const { replace } = useRouter();
   const nowPlaying = useNowPlaying();
 
   return (
@@ -61,6 +64,14 @@ export default function NowPlaying() {
           className="w-full h-full object-cover rounded-2xl scale-125 opacity-20"
         />
       </div>
+
+      <button
+        className="absolute top-4 right-4 size-10 flex items-center justify-center z-50"
+        type="button"
+        onClick={() => replace('/')}
+      >
+        <XIcon className="size-6 text-stone-200 opacity-25" />
+      </button>
 
       <div className="flex space-x-6 z-10">
         <div className="w-[300px] h-[300px] bg-stone-900 shadow-3xl rounded-2xl relative shadow-2xl ring-2 ring-black/20">
