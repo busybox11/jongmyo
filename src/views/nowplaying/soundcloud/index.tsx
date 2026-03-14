@@ -1,3 +1,5 @@
+import SoundCloudWaveformComponent from './Waveform';
+
 const nowPlaying = {
   title: 'eulesspharassia',
   artist: 'dxmelia.wav',
@@ -20,8 +22,6 @@ const nowPlaying = {
 };
 
 const waveform = {
-  width: 1800,
-  height: 140,
   samples: [
     95, 96, 96, 93, 92, 96, 96, 101, 96, 93, 95, 87, 85, 87, 83, 93, 98, 102,
     98, 95, 85, 93, 93, 88, 102, 100, 103, 102, 94, 97, 100, 93, 96, 87, 86,
@@ -141,8 +141,10 @@ const waveform = {
   ],
 };
 
-const currentTime = 78;
-const maxTime = 3 * 60 + 53;
+function durationToMs(duration: string) {
+  const [minutes, seconds] = duration.split(':').map(Number);
+  return minutes * 60 * 1000 + seconds * 1000;
+}
 
 export default function SoundCloudNowPlaying() {
   return (
@@ -184,49 +186,12 @@ export default function SoundCloudNowPlaying() {
           </div>
         </div>
 
-        <div className="relative flex flex-col items-center justify-end h-full w-auto overflow-hidden -ml-6 -mr-6">
-          <div className="absolute bottom-0 left-0 right-0 flex flex-row items-center justify-between px-6 mb-7">
-            <span className="text-xs bg-black text-stone-200 px-1">
-              {nowPlaying.progress}
-            </span>
-            <span className="text-xs bg-black text-stone-200 px-1">
-              {nowPlaying.duration}
-            </span>
-          </div>
-
-          <div className="flex flex-row w-full overflow-x-auto overflow-y-hidden items-center space-x-[3px]">
-            {waveform.samples.map((sample, index) => (
-              <div
-                key={index.toString()}
-                className="grid grid-rows-3 h-[128px] w-[2px] shrink-0"
-              >
-                <div className="row-span-2 grid items-end">
-                  <div
-                    className={
-                      index <= currentTime ? 'bg-orange-600' : 'bg-stone-200/20'
-                    }
-                    style={{
-                      height: `${(100 * sample) / 135}%`,
-                    }}
-                  />
-                </div>
-                <div className="row-span-1">
-                  <div
-                    className={
-                      index <= currentTime
-                        ? 'bg-orange-400/50'
-                        : 'bg-stone-200/20'
-                    }
-                    style={{
-                      height: `${(100 * sample) / 135}%`,
-                      marginTop: '2px',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SoundCloudWaveformComponent
+          samples={waveform.samples}
+          progress={durationToMs(nowPlaying.progress)}
+          duration={durationToMs(nowPlaying.duration)}
+          isPlaying={true}
+        />
       </div>
     </main>
   );

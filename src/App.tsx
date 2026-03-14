@@ -3,7 +3,7 @@ import './App.css';
 
 import { RouterSync, useRouter } from './hooks/useRouter';
 import Main from './views/Main';
-import SoundCloudNowPlaying from './views/nowplaying/SoundCloudNowPlaying';
+import SoundCloudNowPlaying from './views/nowplaying/soundcloud';
 
 const App = () => {
   return (
