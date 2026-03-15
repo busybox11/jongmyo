@@ -17,7 +17,7 @@ const nowPlaying = {
     'touhou',
     'patchouli',
   ],
-  progress: '1:18',
+  progress: '0:12',
   duration: '3:53',
 };
 
@@ -157,7 +157,7 @@ export default function SoundCloudNowPlaying() {
         />
       </div>
 
-      <div className="flex flex-col z-10 p-6 w-full h-full">
+      <div className="flex flex-col z-10 p-6 w-full h-full space-y-6">
         <div className="h-36 flex flex-row space-x-4 shrink-0">
           <img
             src={nowPlaying.image}
