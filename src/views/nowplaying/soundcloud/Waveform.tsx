@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 type SoundCloudWaveformComponentProps = {
   samples: number[];
   progress: number;
+  getProgress: () => number;
   duration: number;
   isPlaying: boolean;
 };
@@ -10,8 +11,9 @@ type SoundCloudWaveformComponentProps = {
 export default function SoundCloudWaveformComponent({
   samples,
   progress,
+  getProgress,
   duration,
-  isPlaying,
+  isPlaying: _isPlaying,
 }: SoundCloudWaveformComponentProps) {
   const formatDuration = (milliseconds: number) => {
     const seconds = Math.floor(milliseconds / 1000);
@@ -34,7 +36,7 @@ export default function SoundCloudWaveformComponent({
       <div id="waveform" className="w-full h-full">
         <WaveformCanvas
           samples={samples}
-          progress={progress}
+          getProgress={getProgress}
           duration={duration}
         />
       </div>
@@ -44,69 +46,109 @@ export default function SoundCloudWaveformComponent({
 
 function WaveformCanvas({
   samples,
-  progress,
+  getProgress,
   duration,
 }: {
   samples: number[];
-  progress: number;
+  getProgress: () => number;
   duration: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const drawWaveform = useCallback(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const baseColor = (alpha: number) => `rgba(242, 111, 35, ${alpha})`;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-        const barWidth = 1;
-        const firstBarHeight = canvas.height * 0.65;
+    const progress = getProgress();
+    const dpr = window.devicePixelRatio ?? 1;
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    ctx.clearRect(0, 0, w, h);
 
-        const secondBarHeight = canvas.height * 0.3;
-        const secondBarHeightOffset = firstBarHeight + 2;
+    const barWidth = 3;
+    const barSpacing = 2;
+    const totalBarWidth = barWidth + barSpacing;
 
-        const currentIndex = Math.floor((progress / duration) * samples.length);
+    const firstBarHeight = h * 0.65;
+    const secondBarHeight = h * 0.3;
+    const secondBarHeightOffset = firstBarHeight + 2;
 
-        for (let i = 0; i < samples.length; i++) {
-          const sample = samples[i];
+    const exactBarIndex = (progress / duration) * samples.length;
+    const centerX = w / 2;
 
-          const height = (sample / 135) * firstBarHeight;
-          const heightOffset = firstBarHeight - height;
+    let start = Math.floor(exactBarIndex - centerX / totalBarWidth);
+    let end = Math.ceil(exactBarIndex + (w - centerX) / totalBarWidth);
+    start = Math.max(0, start);
+    end = Math.min(samples.length, end);
 
-          const secondBarHeightValue = (sample / 135) * secondBarHeight;
+    // Lerp white -> orange; t in [0,1] is progress through this bar
+    const lerpColor = (t: number, mainAlpha: boolean) => {
+      const u = Math.max(0, Math.min(1, t));
+      const r = Math.round(255 + u * (242 - 255));
+      const g = Math.round(255 + u * (111 - 255));
+      const b = Math.round(255 + u * (35 - 255));
+      const a = mainAlpha ? 0.25 + u * 0.55 : 0.075 + u * 0.225;
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    };
 
-          ctx.fillStyle =
-            i <= currentIndex ? baseColor(0.8) : `rgba(255, 255, 255, 0.3)`;
-          ctx.fillRect(
-            i * barWidth + barWidth * i,
-            heightOffset,
-            barWidth,
-            height,
-          );
-          ctx.fillStyle =
-            i <= currentIndex ? baseColor(0.3) : `rgba(255, 255, 255, 0.1)`;
-          ctx.fillRect(
-            i * barWidth + barWidth * i,
-            secondBarHeightOffset,
-            barWidth,
-            secondBarHeightValue,
-          );
-        }
-      }
+    for (let i = start; i < end; i++) {
+      const barProgress = exactBarIndex - i;
+      const sample = samples[i];
+      const height = (sample / 135) * firstBarHeight;
+      const heightOffset = firstBarHeight - height;
+      const secondBarHeightValue = (sample / 135) * secondBarHeight;
+
+      // Position so playhead (exactBarIndex) stays at centerX; bars slide smoothly
+      const xOffset = (i - exactBarIndex) * totalBarWidth + centerX;
+
+      ctx.fillStyle = lerpColor(barProgress, true);
+      ctx.fillRect(xOffset, heightOffset, barWidth, height);
+      ctx.fillStyle = lerpColor(barProgress, false);
+      ctx.fillRect(
+        xOffset,
+        secondBarHeightOffset,
+        barWidth,
+        secondBarHeightValue,
+      );
     }
-  }, [samples, progress, duration]);
+  }, [samples, duration, getProgress]);
 
   useEffect(() => {
-    drawWaveform();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio ?? 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      const c = canvas.getContext('2d');
+      c?.scale(dpr, dpr);
+    });
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio ?? 1;
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx?.scale(dpr, dpr);
+    resizeObserver.observe(canvas);
+
+    let rafId: number;
+    const loop = () => {
+      drawWaveform();
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+
+    return () => {
+      resizeObserver.disconnect();
+      cancelAnimationFrame(rafId);
+    };
   }, [drawWaveform]);
 
   return (
-    <canvas
-      id="waveform-canvas"
-      className="w-full h-full"
-      ref={canvasRef}
-    ></canvas>
+    <canvas id="waveform-canvas" className="w-full h-full" ref={canvasRef} />
   );
 }
