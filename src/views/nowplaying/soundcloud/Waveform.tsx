@@ -13,7 +13,7 @@ export default function SoundCloudWaveformComponent({
   progress,
   getProgress,
   duration,
-  isPlaying: _isPlaying,
+  isPlaying,
 }: SoundCloudWaveformComponentProps) {
   const formatDuration = (milliseconds: number) => {
     const seconds = Math.floor(milliseconds / 1000);
@@ -24,11 +24,11 @@ export default function SoundCloudWaveformComponent({
 
   return (
     <div className="relative flex flex-col items-center justify-end h-full w-auto overflow-hidden -ml-6 -mr-6">
-      <div className="absolute bottom-0 left-0 right-0 flex flex-row items-center justify-between px-6 mb-7">
-        <span className="text-xs bg-black text-stone-200 px-1">
+      <div className="absolute bottom-0.5 left-0 right-0 flex flex-row items-center justify-between px-6 mb-7">
+        <span className="tabular-nums text-xs bg-black text-stone-200 px-1">
           {formatDuration(progress)}
         </span>
-        <span className="text-xs bg-black text-stone-200 px-1">
+        <span className="tabular-nums text-xs bg-black text-stone-200 px-1">
           {formatDuration(duration)}
         </span>
       </div>
@@ -38,6 +38,7 @@ export default function SoundCloudWaveformComponent({
           samples={samples}
           getProgress={getProgress}
           duration={duration}
+          isPlaying={isPlaying}
         />
       </div>
     </div>
@@ -48,10 +49,12 @@ function WaveformCanvas({
   samples,
   getProgress,
   duration,
+  isPlaying,
 }: {
   samples: number[];
   getProgress: () => number;
   duration: number;
+  isPlaying: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -71,7 +74,7 @@ function WaveformCanvas({
     const barSpacing = 2;
     const totalBarWidth = barWidth + barSpacing;
 
-    const firstBarHeight = h * 0.65;
+    const firstBarHeight = h * 0.635;
     const secondBarHeight = h * 0.3;
     const secondBarHeightOffset = firstBarHeight + 2;
 
@@ -85,11 +88,15 @@ function WaveformCanvas({
 
     // Lerp white -> orange; t in [0,1] is progress through this bar
     const lerpColor = (t: number, mainAlpha: boolean) => {
+      const playingColors = [242, 111, 35];
+      const pausedColors = [200, 200, 200];
+      const colors = isPlaying ? playingColors : pausedColors;
+
       const u = Math.max(0, Math.min(1, t));
-      const r = Math.round(255 + u * (242 - 255));
-      const g = Math.round(255 + u * (111 - 255));
-      const b = Math.round(255 + u * (35 - 255));
-      const a = mainAlpha ? 0.25 + u * 0.55 : 0.075 + u * 0.225;
+      const r = Math.round(255 + u * (colors[0] - 255));
+      const g = Math.round(255 + u * (colors[1] - 255));
+      const b = Math.round(255 + u * (colors[2] - 255));
+      const a = mainAlpha ? 0.25 + u * 0.55 : 0.05 + u * 0.15;
       return `rgba(${r}, ${g}, ${b}, ${a})`;
     };
 
@@ -113,7 +120,7 @@ function WaveformCanvas({
         secondBarHeightValue,
       );
     }
-  }, [samples, duration, getProgress]);
+  }, [samples, duration, getProgress, isPlaying]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

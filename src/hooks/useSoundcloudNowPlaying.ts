@@ -1,8 +1,7 @@
-import { atom, useAtom, useAtomValue } from "jotai";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 
-/** When true, React state (e.g. displayed time) updates every 1s; canvas still gets 60fps via getProgress(). */
-export const SOUNDCLOUD_DEBUG_PROGRESS_1S = false;
+const PLAYING_URL = "/api/playing/";
 
 const soundcloudNowPlayingAtom = atom({
   title: "eulesspharassia",
@@ -140,31 +139,60 @@ const soundcloudNowPlayingAtom = atom({
   ],
 });
 const soundcloudNowPlayingProgressAtom = atom(0);
+const soundcloudNowPlayingPlayingAtom = atom(false);
 
 export const useSoundcloudNowPlaying = () => {
   const nowPlaying = useAtomValue(soundcloudNowPlayingAtom);
+  const setNowPlaying = useSetAtom(soundcloudNowPlayingAtom);
   const [progress, setProgress] = useAtom(soundcloudNowPlayingProgressAtom);
+  const [playing, setPlaying] = useAtom(soundcloudNowPlayingPlayingAtom);
   const progressRef = useRef(0);
   const startTimeRef = useRef(Date.now());
   const lastStateUpdateRef = useRef(0);
 
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch(PLAYING_URL);
+      if (!res.ok) return;
+      const data = (await res.json()).data;
+
+      const newData = {
+        title: data.title,
+        artist: data.artist,
+        image: data.meta.image,
+        genre: [data.meta.source],
+        duration: data.progress.duration,
+      };
+
+      setNowPlaying((prev) => ({ ...prev, ...newData }));
+      const currentMs = data.progress.current ?? 0;
+      startTimeRef.current = Date.now() - currentMs; // so elapsed continues from server position
+      progressRef.current = currentMs;
+      setProgress(currentMs);
+      lastStateUpdateRef.current = Date.now();
+      setPlaying(data.progress.playing);
+      return newData;
+    };
+    poll();
+    const id = setInterval(poll, 1000);
+    return () => clearInterval(id);
+  }, [setNowPlaying, setProgress, setPlaying]);
+
   const getProgress = useCallback(() => {
+    if (!playing) return progressRef.current;
     const elapsed = Date.now() - startTimeRef.current;
     progressRef.current = Math.min(elapsed, nowPlaying.duration);
     return progressRef.current;
-  }, [nowPlaying.duration]);
+  }, [nowPlaying.duration, playing]);
 
   useEffect(() => {
     let rafId: number;
     const tick = () => {
+      if (!playing) return;
       const now = Date.now();
       const elapsed = now - startTimeRef.current;
-      console.log(elapsed);
       progressRef.current = Math.min(elapsed, nowPlaying.duration);
-      if (
-        !SOUNDCLOUD_DEBUG_PROGRESS_1S ||
-        now - lastStateUpdateRef.current >= 1000
-      ) {
+      if (now - lastStateUpdateRef.current >= 1000) {
         setProgress(progressRef.current);
         lastStateUpdateRef.current = now;
       }
@@ -172,7 +200,7 @@ export const useSoundcloudNowPlaying = () => {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [nowPlaying.duration, setProgress]);
+  }, [nowPlaying.duration, setProgress, playing]);
 
-  return { ...nowPlaying, progress, getProgress };
+  return { ...nowPlaying, progress, getProgress, playing };
 };
