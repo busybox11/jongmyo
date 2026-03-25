@@ -1,11 +1,15 @@
 {
   "name": "jongmyo",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run -F @jongmyo/ui build",
     "check": "biome check --write .",
     "dev": "bun run -F @jongmyo/ui dev",
+    "dev:daemon": "bun run -F @jongmyo/daemon dev",
     "format": "biome format --write .",
     "preview": "bun run -F @jongmyo/ui preview"
   },
