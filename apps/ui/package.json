@@ -11,6 +11,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@jongmyo/protocol": "workspace:*",
     "@fontsource-variable/figtree": "^5.2.10",
     "jotai": "^2.18.1",
     "lucide-react": "^0.577.0",
