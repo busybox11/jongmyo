@@ -1,5 +1,5 @@
-import { Mic2Icon } from 'lucide-react';
-import ScrollableList from '../../components/main/ScrollableList';
+import { Mic2Icon } from "lucide-react";
+import ScrollableList from "../../components/main/ScrollableList";
 
 export default function MainArtists() {
   return (

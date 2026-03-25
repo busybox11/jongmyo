@@ -1,5 +1,9 @@
 /// <reference types="@rsbuild/core/types" />
 
+interface ImportMetaEnv {
+  readonly PUBLIC_JONGMYO_DAEMON_WS: string;
+}
+
 declare module "*.css";
 declare module "@fontsource/*" {}
 declare module "@fontsource-variable/*" {}

@@ -1,9 +1,29 @@
+import {
+  getNowPlayingResponseSchema,
+  type NowPlayingState,
+  safeParseServerMessage,
+} from "@jongmyo/protocol";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
+import {
+  type RefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 
-const PLAYING_URL = "/api/playing/";
+const DAEMON_SNAPSHOT_URL = "/daemon/v1/now-playing";
 
-const soundcloudNowPlayingAtom = atom({
+export type SoundcloudNowPlaying = {
+  title: string;
+  artist: string;
+  image: string;
+  genre: string[];
+  duration: number;
+  waveform: number[];
+};
+
+export const soundcloudNowPlayingAtom = atom<SoundcloudNowPlaying>({
   title: "eulesspharassia",
   artist: "dxmelia.wav",
   image: "https://i1.sndcdn.com/artworks-Jzlr0cqDszMsky5w-1EhRpQ-large.jpg",
@@ -138,8 +158,33 @@ const soundcloudNowPlayingAtom = atom({
     70, 61, 60, 58, 52, 49, 49, 51, 47, 43, 42, 43, 42, 40, 40, 41, 41,
   ],
 });
-const soundcloudNowPlayingProgressAtom = atom(0);
-const soundcloudNowPlayingPlayingAtom = atom(false);
+export const soundcloudNowPlayingProgressAtom = atom(0);
+export const soundcloudNowPlayingPlayingAtom = atom(false);
+
+function applyDaemonNowPlayingState(
+  state: NowPlayingState,
+  setNowPlaying: (u: SetStateAction<SoundcloudNowPlaying>) => void,
+  setProgress: (n: number) => void,
+  setPlaying: (b: boolean) => void,
+  startTimeRef: RefObject<number>,
+  progressRef: RefObject<number>,
+  lastStateUpdateRef: RefObject<number>,
+) {
+  setNowPlaying((prev) => ({
+    ...prev,
+    title: state.title,
+    artist: state.artist,
+    image: state.meta.image,
+    genre: [state.meta.source],
+    duration: state.progress.duration,
+  }));
+  const currentMs = state.progress.current ?? 0;
+  startTimeRef.current = Date.now() - currentMs;
+  progressRef.current = currentMs;
+  setProgress(currentMs);
+  lastStateUpdateRef.current = Date.now();
+  setPlaying(state.progress.playing);
+}
 
 export const useSoundcloudNowPlaying = () => {
   const nowPlaying = useAtomValue(soundcloudNowPlayingAtom);
@@ -151,31 +196,67 @@ export const useSoundcloudNowPlaying = () => {
   const lastStateUpdateRef = useRef(0);
 
   useEffect(() => {
-    const poll = async () => {
-      const res = await fetch(PLAYING_URL);
-      if (!res.ok) return;
-      const data = (await res.json()).data;
+    let cancelled = false;
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
-      const newData = {
-        title: data.title,
-        artist: data.artist,
-        image: data.meta.image,
-        genre: [data.meta.source],
-        duration: data.progress.duration,
-      };
-
-      setNowPlaying((prev) => ({ ...prev, ...newData }));
-      const currentMs = data.progress.current ?? 0;
-      startTimeRef.current = Date.now() - currentMs; // so elapsed continues from server position
-      progressRef.current = currentMs;
-      setProgress(currentMs);
-      lastStateUpdateRef.current = Date.now();
-      setPlaying(data.progress.playing);
-      return newData;
+    const apply = (state: NowPlayingState) => {
+      if (cancelled) return;
+      applyDaemonNowPlayingState(
+        state,
+        setNowPlaying,
+        setProgress,
+        setPlaying,
+        startTimeRef,
+        progressRef,
+        lastStateUpdateRef,
+      );
     };
-    poll();
-    const id = setInterval(poll, 1000);
-    return () => clearInterval(id);
+
+    const onMessage = (raw: string) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return;
+      }
+      const r = safeParseServerMessage(parsed);
+      if (!r.success || r.data.type !== "now_playing") return;
+      apply(r.data.state);
+    };
+
+    const connect = () => {
+      if (cancelled) return;
+      ws = new WebSocket(import.meta.env.PUBLIC_JONGMYO_DAEMON_WS);
+      ws.onmessage = (e) => onMessage(String(e.data));
+      ws.onclose = () => {
+        if (cancelled) return;
+        reconnectTimer = setTimeout(connect, 1500);
+      };
+      ws.onerror = () => {
+        ws?.close();
+      };
+    };
+
+    void (async () => {
+      try {
+        const res = await fetch(DAEMON_SNAPSHOT_URL);
+        if (!res.ok || cancelled) return;
+        const json: unknown = await res.json();
+        const snap = getNowPlayingResponseSchema.safeParse(json);
+        if (!snap.success || !snap.data.state) return;
+        apply(snap.data.state);
+      } catch {
+        // daemon may be offline during dev
+      }
+    })();
+
+    connect();
+    return () => {
+      cancelled = true;
+      clearTimeout(reconnectTimer);
+      ws?.close();
+    };
   }, [setNowPlaying, setProgress, setPlaying]);
 
   const getProgress = useCallback(() => {

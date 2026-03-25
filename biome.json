@@ -17,13 +17,13 @@
   },
   "javascript": {
     "formatter": {
-      "quoteStyle": "single"
+      "quoteStyle": "double"
     }
   },
   "css": {
     "parser": {
       "cssModules": true,
-      "tailwindDirectives": false
+      "tailwindDirectives": true
     }
   },
   "linter": {

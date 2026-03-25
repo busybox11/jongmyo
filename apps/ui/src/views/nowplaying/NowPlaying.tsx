@@ -1,12 +1,12 @@
-import { XIcon } from 'lucide-react';
-import { useNowPlaying } from '../../hooks/useNowPlaying';
-import { useRouter } from '../../hooks/useRouter';
+import { XIcon } from "lucide-react";
+import { useNowPlaying } from "../../hooks/useNowPlaying";
+import { useRouter } from "../../hooks/useRouter";
 
 function formatDuration(milliseconds: number) {
   const seconds = Math.floor(milliseconds / 1000);
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 export default function NowPlaying() {
@@ -60,7 +60,7 @@ export default function NowPlaying() {
         <img
           src={nowPlaying.meta.image}
           alt={nowPlaying.title}
-          style={{ filter: 'url(#blurFilter) url(#noiseFilter)' }}
+          style={{ filter: "url(#blurFilter) url(#noiseFilter)" }}
           className="w-full h-full object-cover rounded-2xl scale-125 opacity-20"
         />
       </div>
@@ -68,7 +68,7 @@ export default function NowPlaying() {
       <button
         className="absolute top-4 right-4 size-10 flex items-center justify-center z-50"
         type="button"
-        onClick={() => replace('/')}
+        onClick={() => replace("/")}
       >
         <XIcon className="size-6 text-stone-200 opacity-25" />
       </button>

@@ -7,50 +7,50 @@ import {
   Mic2Icon,
   Music4Icon,
   UsbIcon,
-} from 'lucide-react';
-import { useNowPlaying } from '../hooks/useNowPlaying';
-import { useRouter } from '../hooks/useRouter';
+} from "lucide-react";
+import { useNowPlaying } from "../hooks/useNowPlaying";
+import { useRouter } from "../hooks/useRouter";
 
-import MainAlbums from './routes/MainAlbums';
-import MainArtists from './routes/MainArtists';
-import MainHome from './routes/MainHome';
-import MainLibrary from './routes/MainLibrary';
-import MainPlaylists from './routes/MainPlaylists';
+import MainAlbums from "./routes/MainAlbums";
+import MainArtists from "./routes/MainArtists";
+import MainHome from "./routes/MainHome";
+import MainLibrary from "./routes/MainLibrary";
+import MainPlaylists from "./routes/MainPlaylists";
 
 const sidebarItems = [
   {
     icon: HomeIcon,
-    label: 'Jongmyo',
-    href: '/',
+    label: "Jongmyo",
+    href: "/",
     view: MainHome,
   },
   {
     icon: Music4Icon,
-    label: 'Now playing',
-    href: '/nowplaying',
+    label: "Now playing",
+    href: "/nowplaying",
   },
   {
     icon: LibraryIcon,
-    label: 'Library',
-    href: '/library',
+    label: "Library",
+    href: "/library",
     view: MainLibrary,
   },
   {
     icon: ListMusicIcon,
-    label: 'Playlists',
-    href: '/playlists',
+    label: "Playlists",
+    href: "/playlists",
     view: MainPlaylists,
   },
   {
     icon: Mic2Icon,
-    label: 'Artists',
-    href: '/artists',
+    label: "Artists",
+    href: "/artists",
     view: MainArtists,
   },
   {
     icon: DiscAlbumIcon,
-    label: 'Albums',
-    href: '/albums',
+    label: "Albums",
+    href: "/albums",
     view: MainAlbums,
   },
 ];
@@ -63,7 +63,7 @@ function Sidebar() {
       <nav className="h-full overflow-y-auto">
         <ul className="flex flex-col items-center justify-center space-y-2 p-2">
           {sidebarItems.map((item) =>
-            item.href === '/nowplaying' ? (
+            item.href === "/nowplaying" ? (
               <NowPlayingNavIcon key={item.href} />
             ) : (
               <GenericNavIcon
@@ -125,7 +125,7 @@ function NowPlayingNavIcon() {
     <button
       className="size-14 flex items-center justify-center"
       type="button"
-      onClick={() => push('/nowplaying')}
+      onClick={() => push("/nowplaying")}
     >
       <img
         src={nowPlaying.meta.image}
@@ -165,9 +165,9 @@ export default function Main() {
       className="w-full h-full flex flex-row overflow-hidden"
       style={{
         backgroundImage:
-          'radial-gradient(circle, transparent, transparent 30%, #4a044e30 80%, #4a044e90)',
-        backgroundSize: '200vw 280vh',
-        backgroundRepeat: 'no-repeat',
+          "radial-gradient(circle, transparent, transparent 30%, #4a044e30 80%, #4a044e90)",
+        backgroundSize: "200vw 280vh",
+        backgroundRepeat: "no-repeat",
       }}
     >
       <Sidebar />

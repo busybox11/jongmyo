@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from "react";
 
 type SoundCloudWaveformComponentProps = {
   samples: number[];
@@ -19,7 +19,7 @@ export default function SoundCloudWaveformComponent({
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -61,7 +61,7 @@ function WaveformCanvas({
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const progress = getProgress();
@@ -131,14 +131,14 @@ function WaveformCanvas({
       const rect = canvas.getBoundingClientRect();
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
-      const c = canvas.getContext('2d');
+      const c = canvas.getContext("2d");
       c?.scale(dpr, dpr);
     });
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio ?? 1;
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     ctx?.scale(dpr, dpr);
     resizeObserver.observe(canvas);
 

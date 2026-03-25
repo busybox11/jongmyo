@@ -1,4 +1,4 @@
-import HorizScrollableList from '../../components/main/HorizScrollableList';
+import HorizScrollableList from "../../components/main/HorizScrollableList";
 
 export default function MainHome() {
   return (

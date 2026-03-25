@@ -1,6 +1,6 @@
-import { MonitorSpeakerIcon, PauseIcon, Volume1Icon } from 'lucide-react';
-import { useSoundcloudNowPlaying } from '../../../hooks/useSoundcloudNowPlaying';
-import SoundCloudWaveformComponent from './Waveform';
+import { MonitorSpeakerIcon, PauseIcon, Volume1Icon } from "lucide-react";
+import { useSoundcloudNowPlaying } from "../../../hooks/useSoundcloudNowPlaying";
+import SoundCloudWaveformComponent from "./Waveform";
 
 export default function SoundCloudNowPlaying() {
   const nowPlaying = useSoundcloudNowPlaying();
