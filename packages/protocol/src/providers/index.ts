@@ -1,4 +1,4 @@
-export type { GenericProviderEnrichment, ProviderId } from "./types";
+export type { ProviderId } from "./types";
 export {
   safeParseSoundcloudEnricherPostMessage,
   soundcloudEnricherPostMessageSchema,

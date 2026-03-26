@@ -1,9 +1,10 @@
 import {
-  mergeNowPlayingWithSoundcloudEnrichment,
+  applyNowPlayingEnrichment,
+  enrichmentFromSoundcloudPostMessage,
+  type NowPlayingEnrichment,
   type NowPlayingState,
   parseNowPlayingState,
   safeParseSoundcloudEnricherPostMessage,
-  type SoundcloudEnrichmentPatch,
 } from "@jongmyo/protocol";
 
 const FROM_MEDIA = "jongmyo:media-session";
@@ -26,16 +27,13 @@ export default defineContentScript({
     }
 
     let lastCore: NowPlayingState | null = null;
-    let soundcloudEnrichment: {
-      sessionKey: string;
-      extras: SoundcloudEnrichmentPatch;
-    } | null = null;
+    let lastEnrichment: NowPlayingEnrichment | null = null;
 
     function pushMerged() {
       if (!lastCore) return;
-      const merged = mergeNowPlayingWithSoundcloudEnrichment(
+      const merged = applyNowPlayingEnrichment(
         lastCore,
-        isSoundcloudHost() ? soundcloudEnrichment : null,
+        isSoundcloudHost() ? lastEnrichment : null,
       );
       void browser.runtime.sendMessage({
         type: "jongmyo:pushNowPlaying",
@@ -68,10 +66,7 @@ export default defineContentScript({
       ) {
         const parsed = safeParseSoundcloudEnricherPostMessage(m);
         if (!parsed.success) return;
-        soundcloudEnrichment = {
-          sessionKey: parsed.data.sessionKey,
-          extras: parsed.data.payload,
-        };
+        lastEnrichment = enrichmentFromSoundcloudPostMessage(parsed.data);
         pushMerged();
       }
     });

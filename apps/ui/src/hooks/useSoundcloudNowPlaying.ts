@@ -1,6 +1,7 @@
 import {
   getNowPlayingResponseSchema,
   type NowPlayingState,
+  type SoundcloudEnrichment,
   safeParseServerMessage,
 } from "@jongmyo/protocol";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -15,12 +16,12 @@ import {
 const DAEMON_SNAPSHOT_URL = "/daemon/v1/now-playing";
 
 export type SoundcloudNowPlaying = {
-  title: string;
-  artist: string;
-  image: string;
-  genre: string[];
-  duration: number;
-  waveform: number[];
+  title: NowPlayingState["title"];
+  artist: NowPlayingState["artist"];
+  image: NowPlayingState["meta"]["image"];
+  genre: NonNullable<SoundcloudEnrichment["genres"]>;
+  duration: NowPlayingState["progress"]["duration"];
+  waveform: NonNullable<SoundcloudEnrichment["waveform"]>;
 };
 
 export const soundcloudNowPlayingAtom = atom<SoundcloudNowPlaying>({
@@ -170,13 +171,16 @@ function applyDaemonNowPlayingState(
   progressRef: RefObject<number>,
   lastStateUpdateRef: RefObject<number>,
 ) {
+  const soundcloudExtras =
+    state.provider === "soundcloud" ? state.extras : undefined;
   setNowPlaying((prev) => ({
     ...prev,
     title: state.title,
     artist: state.artist,
     image: state.meta.image,
-    genre: [state.meta.source],
+    genre: soundcloudExtras?.genres ?? [state.meta.source],
     duration: state.progress.duration,
+    waveform: soundcloudExtras?.waveform ?? prev.waveform,
   }));
   const currentMs = state.progress.current ?? 0;
   startTimeRef.current = Date.now() - currentMs;
